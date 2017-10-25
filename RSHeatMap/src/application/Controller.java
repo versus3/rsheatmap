@@ -96,6 +96,10 @@ public class Controller {
 	private String imagePath;
 	private double opacity;
 	
+	// algorithm selection
+	private Boolean autoAlgorithm;
+	private Boolean staticAlgorithm;
+	
 	public Controller() throws IOException {
 		this.maximumIntersection = 0;	
 		this.imagePath = "";
@@ -135,6 +139,9 @@ public class Controller {
 		this.dynamicRectangleSimulation = false;
 		BufferedImage image = ImageIO.read(getClass().getResource("/image/drone.png"));
 		droneImage = SwingFXUtils.toFXImage(image, null);
+		
+		this.autoAlgorithm = true;
+		this.staticAlgorithm = false;
 	}
 	
 	public void initialiseSweep() {
@@ -251,13 +258,16 @@ public class Controller {
 			}
 		}
 		
-		// computing the complexity
-		double worstCaseRegular = (newRectangles.size() + rectangles.size()) * (newRectangles.size() + rectangles.size()) *
-				Math.log(newRectangles.size() + rectangles.size());
-		double worstCaseDynamic = (newRectangles.size() + intersectionCount) * (newRectangles.size() + intersectionCount) *
-				Math.log(newRectangles.size() + intersectionCount) + Math.log(1 + smallerRectanglesRtree.size());
-		
-		if(worstCaseDynamic >= worstCaseRegular) {
+		double worstCaseRegular = 1;
+		double worstCaseDynamic = 0;
+		if(this.autoAlgorithm) {
+			// computing the complexity
+			worstCaseRegular = (newRectangles.size() + rectangles.size()) * (newRectangles.size() + rectangles.size()) *
+					Math.log(newRectangles.size() + rectangles.size());
+			worstCaseDynamic = (newRectangles.size() + intersectionCount) * (newRectangles.size() + intersectionCount) *
+					Math.log(newRectangles.size() + intersectionCount) + Math.log(1 + smallerRectanglesRtree.size());
+		}
+		if((worstCaseDynamic >= worstCaseRegular) || this.staticAlgorithm) {
 			Iterator<CustomRectangle> rectangleIterator = newRectangles.iterator();
 			while(rectangleIterator.hasNext()) {
 				CustomRectangle customRectangle = rectangleIterator.next();
@@ -985,8 +995,8 @@ public class Controller {
 					iter.previous();
 					rectangle.y = yCordinate;
 					rectangle.height = heightEndPoint - yCordinate;
-
-					SeparatedRectangle smallRectangle = new SeparatedRectangle(rectangle);
+					
+					SeparatedRectangle smallRectangle = new SeparatedRectangle(rectangle);					
 					Iterator<CustomRectangle> input = rectangles.iterator();
 					int count = 0;
 					while (input.hasNext()) {
@@ -1400,6 +1410,21 @@ public class Controller {
 			dynamicRectangles = new ArrayList<DynamicRectangle>();
 			this.dynamicRectangleSimulation = false;
 		}
+	}
+	
+	public void setAutoAlgorithm() {
+		this.autoAlgorithm = true;
+		this.staticAlgorithm = false;
+	}
+	
+	public void setStaticAlgorithm() {
+		this.autoAlgorithm = false;
+		this.staticAlgorithm = true;
+	}
+	
+	public void setDynamicAlgorithm() {
+		this.staticAlgorithm = false;
+		this.autoAlgorithm = false;
 	}
 	
 }
