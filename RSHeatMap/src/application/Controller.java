@@ -1,7 +1,7 @@
 /**
  * @author: Vivek Kumar
  * @creationDate: 31/07/2017
- * @lastModifiedDate: 02/10/2017
+ * @lastModifiedDate: 29/11/2017
  * @description: The class is the main controller for the application. The main 
  * purpose of this class is the compute the crest algorithm during various events like:
  *  1. Bulk load of data points
@@ -10,6 +10,7 @@
  *  4. Selection of either static or dynamic algorithm based on the number of intersections
  *  5. Simulation of drones across the canvas
  *  6. Loading data points from Open Load Map
+ *  7. Simulation of  dynamic data points
  */
 
 package application;
@@ -1247,6 +1248,7 @@ public class Controller {
 	// add a new drone
 	public void addDrones() {
 		if(!(this.addingDynamicRectangle || this.dynamicRectangleSimulation)) {
+			drones = new ArrayList<Drone>();
 			this.addingDrone = true;
 			this.addingCordinates = true;
 			Drone drone = new Drone();
@@ -1264,6 +1266,7 @@ public class Controller {
 	// add a dynamic data point
 	public void addDynamicRectangle() {
 		if(!(this.addingDrone || this.droneSimulation)) {
+			dynamicRectangles = new ArrayList<DynamicRectangle>();
 			this.addingDynamicRectangle = true;
 			this.addingDynamicRectangleCordinates = true;
 			DynamicRectangle dynamicRectangle = new DynamicRectangle();
@@ -1312,6 +1315,7 @@ public class Controller {
 						canvas.getGraphicsContext2D().fillRect(inputRectangle.getCenterX()-2.5, inputRectangle.getCenterY()-2.5, 5, 5);
 					}
 				}
+				drone.traversedCoordinates.add(drone.coordinates.get(0));
 				drone.coordinates.remove(0);
 			}
 		}
@@ -1324,8 +1328,12 @@ public class Controller {
 		}
 		if(!moreCoordinatesRemanining) {
 			drawSmallerRectangles();
-			drones = new ArrayList<Drone>();
 			this.droneSimulation = false;
+			for(int i=0; i < noOfDrones; i++) {
+				Drone drone = drones.get(i);
+				drone.coordinates = drone.traversedCoordinates;
+				drone.traversedCoordinates = new ArrayList<Coordinate>();
+			}
 		}
 	}
 	
@@ -1389,6 +1397,7 @@ public class Controller {
 				Coordinate coordinate = dynamicRectangle.coordinates.get(0);
 				previousPoints.add(coordinate);
 				calculateCrestForDynamicRectangle(coordinate.getxValue(), coordinate.getyValue());
+				dynamicRectangle.traversedCoordinates.add(dynamicRectangle.coordinates.get(0));
 				dynamicRectangle.coordinates.remove(0);
 				drawSmallerRectangles();
 			}
@@ -1407,7 +1416,11 @@ public class Controller {
 				removeSelectedRectangle(previousCoordinate.getxValue(), previousCoordinate.getyValue());
 			}
 			drawSmallerRectangles();
-			dynamicRectangles = new ArrayList<DynamicRectangle>();
+			for(int i=0; i < dynamicRectangles.size(); i++) {
+				DynamicRectangle dynamicRectangle = dynamicRectangles.get(i);
+				dynamicRectangle.coordinates = dynamicRectangle.traversedCoordinates;
+				dynamicRectangle.traversedCoordinates = new ArrayList<Coordinate>();
+			}
 			this.dynamicRectangleSimulation = false;
 		}
 	}
